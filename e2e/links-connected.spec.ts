@@ -31,7 +31,9 @@ test('creator CRUD and guest task unlock use the real database without leaking t
     await page.getByLabel('Tên nhiệm vụ', { exact: true }).fill('Controlled local task');
     await page.getByLabel('URL', { exact: true }).fill(`${origin}/en`);
     await page.getByLabel('Ảnh link', { exact: false }).setInputFiles({ name: 'cover.png', mimeType: 'image/png', buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aY4sAAAAASUVORK5CYII=', 'base64') });
+    const saveResponse = page.waitForResponse((response) => response.request().method() === 'POST' && !!response.request().headers()['next-action']);
     await page.getByRole('button', { name: 'Lưu link', exact: true }).click();
+    expect((await saveResponse).status()).toBeLessThan(400);
     await expect(page).toHaveURL(/dashboard\/links\/[a-f0-9-]{36}$/);
     stage = 'public-page';
     const publicPage = await guest.newPage();
@@ -117,7 +119,7 @@ test('creator CRUD and guest task unlock use the real database without leaking t
     await page.getByRole('button', { name: 'Xóa link', exact: true }).click();
     await expect(page).toHaveURL(`${origin}/vi/dashboard`);
   } catch (error) {
-    console.error('Creator E2E failure', { stage, pathname: new URL(page.url()).pathname });
+    console.error('Creator E2E failure', { stage, pathname: new URL(page.url()).pathname, alerts: await page.getByRole('alert').allTextContents() });
     throw error;
   } finally {
     await guest.close();
