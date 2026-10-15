@@ -13,11 +13,11 @@ Cập nhật: 2026-10-16, Asia/Saigon. Các checkpoint lịch sử phía dưới
 | Analytics | 7/30/90 ngày, UTC visitor/link/day dedup; dữ liệu thật và trang thống kê có E2E |
 | Quản trị | Users/links/reports/contacts/audit; server + DB roles, moderation atomic audit, khóa member; integration + report UI E2E |
 | Kiểm thử | 36 unit; 8 integration (5 files); full E2E 29/29 đạt; contact/admin bổ sung 1/1 đạt |
-| CI | Quality + connected đã chạy đạt trên GitHub main (run 38797112794); environment test chỉ cho phép main/codex branch |
-| Vercel | Preview đã deploy và browser smoke thật đạt; production đã có schema riêng, chờ server key |
+| CI | Quality + connected đã chạy đạt trên GitHub main b34a328 (run 38799508178); environment test chỉ cho phép main/codex branch |
+| Vercel | Production READY tại https://slimexlink.vercel.app; public browser smoke desktop/mobile đạt, dùng Supabase production riêng |
 | Kiếm tiền | Loại khỏi phạm vi theo yêu cầu |
 
-Chưa nghiệm thu production. Còn kiểm tra browser chuyển tab tự nhiên (headless dùng visibility event có kiểm soát), email delivery/PKCE từ hộp thư, OAuth trên domain triển khai, xoay service key đã từng nhập nhầm và cấu hình project production riêng. Link-image orphan Storage đang cần dọn có kiểm tra tham chiếu; cron hiện dọn dữ liệu database. Hướng dẫn ở docs/DEPLOYMENT.md, kiến trúc ở docs/CORE-ARCHITECTURE.md.
+Đã deploy production, chưa nghiệm thu luồng đăng nhập/ghi dữ liệu production. Còn kiểm tra browser chuyển tab tự nhiên (headless dùng visibility event có kiểm soát), email delivery/PKCE từ hộp thư, cấu hình OAuth/SMTP production và xoay key của project test từng nhập nhầm. Production dùng key mới riêng. Link-image orphan Storage đang cần dọn có kiểm tra tham chiếu; cron hiện dọn dữ liệu database. Hướng dẫn ở docs/DEPLOYMENT.md, kiến trúc ở docs/CORE-ARCHITECTURE.md.
 
 ## Lịch sử checkpoint
 
@@ -97,3 +97,10 @@ Checkpoint Git nền tảng: db5b2c9 (mã/tests), d0bb84f (tài liệu/bằng ch
 - Security advisors: 3 INFO deny-all tables không policy (server-only), 3 WARN authenticated SECURITY DEFINER RPC (save/delete có ownership/active checks, moderate có admin check; đã kiểm thử trên test DB). Không mở thêm quyền để xóa cảnh báo. Tham khảo https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable và https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy.
 - Auto production build được giữ bằng Ignored Build Step `test "$VERCEL_ENV" = production`; cần gỡ khi production env/schema/Auth sẵn sàng.
 - Server key người dùng điền đã lưu vào Vercel production dưới dạng sensitive, nhưng phép kiểm tra Auth Admin chỉ đọc trả 401 Invalid API key. Đã yêu cầu sửa trong .env.production.local; chưa gỡ build hold/chưa deploy production. Không ghi key vào tài liệu/log/Git.
+- Sau khi user thay key đầy đủ: Auth Admin production chỉ đọc HTTP 200, Vercel sensitive env đã cập nhật. Site URL đúng production alias và 4 redirect URL chính xác đã xác nhận bằng dashboard. Google vẫn false, SMTP chưa cấu hình.
+- CI f512040: quality/integration đạt, E2E 28/29; creator fail ở create/save (URL assertion 5s), chưa tới departure. b34a328 bổ sung đợi response Server Action và log thông báo form an toàn, không nới timeout/skip assertion; CI đang chạy lại.
+- File nhập key đã đổi thành .env.vercel-production.local (gitignored) sau khi provision Vercel: Next tự đọc tên .env.production.local khi chạy production local, gây trộn server key production với public URL test. Đã xác nhận runtime local trở lại đúng URL + key test. Không dùng tên .env.production.local để lưu riêng key production trong workspace phát triển.
+- Creator E2E local chạy lại đạt 1/1; CI b34a328 run 38799508178 đạt quality + connected (36 unit, 8 integration, 29 E2E). Fixture còn sót từ lần local timeout đã dọn theo đúng email UUID.
+- Production deployment đầu READY dpl_CUyyzBmK5syHqZgvL3p3x8nRkoeK. Vercel cấp primary domain slimexlink.vercel.app khi deploy; team alias yêu cầu SSO, primary domain public health 200. Đã đổi NEXT_PUBLIC_SITE_URL + Supabase Site URL/callback sang primary domain và rebuild dpl_76PeU5JQWqUBUWpY68aM3csA5wqD. Deployment Protection giữ nguyên.
+- Deployment dpl_76PeU5JQWqUBUWpY68aM3csA5wqD READY, commit b34a328. Production smoke không mutation đạt: health 200; 5 trang vi/en 200 + axe không vi phạm; dashboard guest redirect login và robots noindex; desktop1440/mobile390 không overflow, keyboard skip link; console/network sạch. Prefetch confirm-email bị abort khi harness đổi trang quá nhanh, đã chờ network idle để kiểm tra hoàn tất request. Sitemap 200 dùng đúng origin public. Ảnh vercel-production-1440.png /390.png đã xem.
+- Không tạo user/seed/link test trong production. Google provider false, email confirmation true, SMTP chưa cấu hình; admin production chưa bootstrap. Preview lịch sử có thể xem ở immutable URL https://slimexlink-79fxgg6qa-slimex-dev-s-projects.vercel.app (cần Vercel access); alias git-main nay theo deployment main mới nhất.

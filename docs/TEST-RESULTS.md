@@ -134,3 +134,8 @@ Seed development thực chạy qua SQL trong transaction, tạo đúng một lin
 - GitHub main run 38797112794: quality + connected success; 36 unit, 8 Supabase integration, 29 E2E trên Ubuntu. Lần trước timeout 1 creator test được giữ trong lịch sử, không xóa/bỏ test.
 - Vercel preview thật build thành công; health và home vi/en/login/discover trả 200, X-Robots-Tag noindex/nofollow.
 - Browser smoke trên https://slimexlink-git-main-slimex-dev-s-projects.vercel.app đạt login/create/task/redirect/no-target-in-HTML; chụp screenshot desktop/mobile. User fixture đã dọn. Không nghiệm thu production/OAuth/email delivery bằng kết quả preview này.
+
+- CI f512040 có 28/29 E2E đạt, creator fail ở bước lưu link. Test nay đợi phản hồi Server Action trước assertion chuyển trang và ghi thông báo form khi thất bại; không tăng timeout hoặc bỏ assertion. CI b34a328 run 38799508178 đạt 36 unit, 8 integration, 29 E2E. Local targeted creator cũng đạt 1/1.
+- Production schema đã áp dụng đủ 8 migration, RLS bật cả 11 bảng public. Auth Admin key kiểm tra chỉ đọc 200; guest REST đọc link_targets bị từ chối 401. Không chạy seed hoặc tạo fixture trên production.
+
+Production dpl_76PeU5JQWqUBUWpY68aM3csA5wqD READY tại https://slimexlink.vercel.app. Browser mới không Vercel auth/bypass: health JSON 200, home vi/en/discover/login/register 200, axe không vi phạm trên 5 trang; guest dashboard redirect login, login noindex; keyboard skip link, 1440/390 không overflow; console/pageerror/requestfailed không lỗi sau khi đợi prefetch hoàn tất trước navigation. Sitemap 200 chứa đúng primary domain. Screenshot vercel-production-1440.png và vercel-production-390.png đã xem. Đây là read-only smoke, không chứng minh OAuth/email delivery hay CRUD bằng tài khoản production.

@@ -2,7 +2,7 @@
 
 Website chia sẻ liên kết cá nhân, giao diện tiếng Việt (mặc định) và tiếng Anh. Đích triển khai: Vercel; dữ liệu, Auth và Storage: Supabase.
 
-**Hiện tại:** tài khoản, avatar, CRUD link/nhiệm vụ/ảnh, mở khóa, khám phá, báo cáo/liên hệ, thống kê và quản trị đã có mã kết nối Supabase thử nghiệm. Đã có Vercel preview được kiểm tra; chưa nghiệm thu production. Không có module kiếm tiền. Xem [STATUS.md](STATUS.md) và [kết quả kiểm thử](docs/TEST-RESULTS.md) trước khi triển khai.
+**Website:** https://slimexlink.vercel.app — đã deploy Vercel với Supabase production riêng và kiểm tra các trang công khai trên desktop/mobile. CRUD/mở khóa/phân quyền có integration/E2E trên Supabase test; Google và SMTP production cần cấu hình riêng, chưa nghiệm thu email delivery hoặc luồng có đăng nhập trên production. Không có module kiếm tiền. Xem [STATUS.md](STATUS.md) và [kết quả kiểm thử](docs/TEST-RESULTS.md).
 
 ## Chạy local
 
