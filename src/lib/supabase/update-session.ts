@@ -29,7 +29,8 @@ export async function updateSession(request: NextRequest) {
       },
     },
   });
-  try { await client.auth.getClaims(); } catch {
+  // A remote user check detects revoked sessions and clears their cookies before Server Components run.
+  try { await client.auth.getUser(); } catch {
     logEvent({ event: 'auth_refresh_unavailable', requestId, status: 503, durationMs: Math.round(performance.now() - started) });
   }
   return response;

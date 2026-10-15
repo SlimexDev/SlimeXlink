@@ -2,7 +2,7 @@
 
 Website chia sẻ liên kết cá nhân, giao diện tiếng Việt (mặc định) và tiếng Anh. Đích triển khai: Vercel; dữ liệu, Auth và Storage: Supabase.
 
-**Hiện tại:** nền tảng giao diện và cấu hình server. Tài khoản, quản lý link, nhiệm vụ, mở khóa, thống kê và quản trị chưa phát hành. Không có module kiếm tiền. Xem [STATUS.md](STATUS.md) và [kết quả kiểm thử](docs/TEST-RESULTS.md) trước khi triển khai.
+**Hiện tại:** tài khoản, avatar, CRUD link/nhiệm vụ/ảnh, mở khóa, khám phá, báo cáo/liên hệ, thống kê và quản trị đã có mã kết nối Supabase thử nghiệm. Chưa nghiệm thu production hoặc triển khai Vercel. Không có module kiếm tiền. Xem [STATUS.md](STATUS.md) và [kết quả kiểm thử](docs/TEST-RESULTS.md) trước khi triển khai.
 
 ## Chạy local
 
@@ -34,7 +34,7 @@ Shell công khai chạy khi chưa có Supabase. Factory phụ thuộc backend s�
 
 Kiến trúc phiên: Auth sẽ chạy qua server, cookie HttpOnly/SameSite=Lax/Secure trên HTTPS. Browser client hiện dành cho dữ liệu công khai, không lưu phiên. Proxy làm mới phiên, giữ cookies/cache headers. Route handlers và server actions vẫn phải kiểm tra danh tính/quyền riêng; Proxy không cấp quyền quản trị. Factory admin có `server-only` và bỏ qua RLS nên chỉ dùng sau kiểm tra quyền rõ ràng.
 
-Chưa có migration nghiệp vụ. Quy trình bổ sung ở [supabase/migrations/README.md](supabase/migrations/README.md). Không có dữ liệu seed production. Kiểm thử RLS hai người dùng/khách sẽ đi cùng schema nghiệp vụ; chưa được chứng minh chỉ bằng nền tảng này.
+Schema nghiệp vụ và RLS/RPC nằm trong migrations. Quy trình áp dụng ở [supabase/migrations/README.md](supabase/migrations/README.md). Không có dữ liệu seed production. Integration trực tiếp API kiểm tra RLS A/B/guest, role escalation, suspension và các RPC mở khóa.
 
 ## Kiểm thử
 
@@ -70,9 +70,12 @@ Integration **không dùng backend giả**. Tạo Supabase project thử nghiệ
 npm run test:integration -- --run
 ```
 
-Thiếu cấu hình làm lệnh thất bại rõ ràng. Test hiện tại chỉ đọc Auth settings và Data API schema endpoint; chưa kiểm tra truy vấn bảng, phiên thật hoặc RLS. Các test nghiệp vụ sẽ bổ sung khi module tương ứng được xây.
+Thiếu cấu hình làm lệnh thất bại rõ ràng. Bộ test hiện kiểm tra Auth, RLS A/B/guest, Storage private, CAS, limiter đồng thời, link CRUD, task timing/retry, token binding/replay, moderation và audit. Fixture được dọn trong finally; không gửi email hàng loạt.
 
 ## Chuẩn bị Vercel
+
+Hướng dẫn đầy đủ: [DEPLOYMENT.md](docs/DEPLOYMENT.md). Kiến trúc và giới hạn: [CORE-ARCHITECTURE.md](docs/CORE-ARCHITECTURE.md). CI ở `.github/workflows/quality.yml`; chưa xác nhận chạy từ GitHub.
+
 
 Chỉ nên tạo preview để xem nền tảng hiện tại; ứng dụng nghiệp vụ chưa đủ điều kiện phát hành.
 
@@ -82,7 +85,9 @@ Chỉ nên tạo preview để xem nền tảng hiện tại; ứng dụng nghi�
 4. Redeploy sau khi thay biến public vì chúng được đóng vào bundle lúc build. Không chạy E2E/seed vào database production.
 5. Kiểm tra `/api/health` trả `{ "status": "ok" }`, `/vi`, `/en`, CSP, console và chuyển locale trên URL preview. Health chỉ thể hiện tiến trình ứng dụng đang trả lời, không xác nhận database khỏe.
 
-Khi triển khai identity: cấu hình Supabase Auth Site URL/redirect allowlist đúng domain, Google OAuth Client ID/Secret trong Supabase provider và callback chính xác do Supabase cung cấp. Email xác nhận/reset cần SMTP thật và template song ngữ trước production. Các bước này chưa được kích hoạt hoặc kiểm thử ở chặng platform.
+Đăng ký email/mật khẩu dùng email **Confirm sign up mặc định** của Supabase: điền form, mở email, bấm liên kết, website nhận mã xác nhận tại `/auth/callback` và cấp phiên. Thêm `http://localhost:3000/auth/callback?locale=vi` và `?locale=en` vào Supabase Auth Redirect URLs; Google dùng cùng callback. Giữ nguyên mẫu mặc định, không cần `{{ .Token }}` hay custom SMTP chỉ để thử liên kết. Supabase có thể giới hạn địa chỉ nhận và số email trên dịch vụ gửi mặc định; xem [hướng dẫn email](https://supabase.com/docs/guides/auth/passwords). Để phát hành, cấu hình SMTP riêng và kiểm thử gửi/nhận email thật.
+
+Khôi phục mật khẩu bắt đầu ở `/vi/forgot-password` hoặc `/en/forgot-password`, dùng email Reset password mặc định và cùng callback allowlist. Trang đặt lại chỉ mở sau khi Supabase xác nhận recovery, với quyền 15 phút gắn người dùng/phiên và dùng một lần. Sau khi lưu, người dùng về đăng nhập với mật khẩu mới. Xem [cấu hình, thiết kế và giới hạn kiểm thử](docs/RECOVERY.md). Việc nhận email thật vẫn cần nghiệm thu riêng.
 
 Không khẳng định hạn mức/gói miễn phí từ bộ khung này; kiểm tra tài liệu hiện hành khi chuẩn bị phát hành. Chưa có Vercel project được liên kết hoặc URL triển khai được xác nhận.
 

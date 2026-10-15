@@ -1,0 +1,1 @@
+create or replace function private.valid_web_url(value text) returns boolean language sql immutable set search_path='' as $$ select value is not null and length(value) between 8 and 2048 and value ~ '^https?://[^/@[:space:]]+([/?#].*)?$' and value !~ '[[:cntrl:][:space:]]' and position(chr(92) in value)=0; $$;

@@ -12,3 +12,4 @@ test-results/
 .vitest/
 coverage/
 .vercel/
+supabase/.temp/

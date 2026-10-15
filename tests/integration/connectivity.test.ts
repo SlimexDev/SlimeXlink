@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest';
 import { getTestConfig } from './setup';
+import { createClient } from '@supabase/supabase-js';
 
 it('connects to the real Supabase Auth settings API using the test publishable key', async () => {
   const config = getTestConfig();
@@ -11,11 +12,10 @@ it('connects to the real Supabase Auth settings API using the test publishable k
   expect(settings).toHaveProperty('external');
 });
 
-it('connects to the real Data API schema endpoint', async () => {
+it('reaches PostgREST through the SDK without needing schema introspection privileges', async () => {
   const config = getTestConfig();
-  const response = await fetch(`${config.url}/rest/v1/`, {
-    headers: { apikey: config.publishableKey }, signal: AbortSignal.timeout(10000),
-  });
-  expect(response.status).toBe(200);
-  expect(response.headers.get('content-type')).toContain('json');
+  const client = createClient(config.url, config.publishableKey, { auth: { persistSession: false, autoRefreshToken: false } });
+  const result = await client.from('slimexlink_connectivity_probe_not_a_real_table').select('id').limit(1);
+  expect(result.status).toBe(404);
+  expect(result.error?.code).toBe('PGRST205');
 });

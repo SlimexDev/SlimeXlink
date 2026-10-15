@@ -1,5 +1,5 @@
 type Diagnostic = {
-  event: 'health' | 'auth_refresh_unavailable' | 'supabase_configuration_invalid';
+  event: 'health' | 'auth_refresh_unavailable' | 'supabase_configuration_invalid' | 'recovery_email_failed' | 'avatar_cleanup_failed' | 'link_request_failed' | 'maintenance_failed';
   requestId: string;
   status: number;
   durationMs: number;

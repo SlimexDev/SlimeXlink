@@ -1,6 +1,6 @@
 # Điều chỉnh luồng nhiệm vụ
 
-Trạng thái: yêu cầu mới đã ghi nhận, chưa triển khai. Đây là ghi nhận thay đổi phạm vi, chưa thay thế đặc tả module verification cần soạn theo thứ tự đã duyệt.
+Trạng thái 2026-10-16: đã triển khai client + Route Handlers + RPC và kiểm thử Supabase/E2E. Spec hiện hành: SPEC-verification.md và SPEC-unlock.md. Headless E2E phát visibility event có kiểm soát; chưa xác nhận chuyển tab tự nhiên trên thiết bị thật.
 
 ## Hành vi yêu cầu
 

@@ -16,19 +16,31 @@ describe('session refresh adapter', () => {
   it('writes refreshed cookies into both downstream request and browser response', async () => {
     vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://test.supabase.co');
     vi.stubEnv('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY', 'sb_publishable_test');
-    const claims = vi.fn();
+    const user = vi.fn();
     vi.mocked(createServerClient).mockImplementation((_url, _key, options) => {
-      claims.mockImplementation(async () => {
+      user.mockImplementation(async () => {
         options.cookies.setAll?.([{ name: 'sb-test-auth-token', value: 'refreshed', options: { httpOnly: true, sameSite: 'lax' } }], { 'Cache-Control': 'private, no-store', Pragma: 'no-cache' });
-        return { data: { claims: { sub: 'test' } }, error: null };
+        return { data: { user: { id: 'test' } }, error: null };
       });
-      return { auth: { getClaims: claims } } as ReturnType<typeof createServerClient>;
+      return { auth: { getUser: user } } as ReturnType<typeof createServerClient>;
     });
     const request = new NextRequest('https://slimexlink.example/en', { headers: { Cookie: 'sb-test-auth-token=old' } });
     const response = await updateSession(request);
-    expect(claims).toHaveBeenCalledOnce();
+    expect(user).toHaveBeenCalledOnce();
     expect(request.cookies.get('sb-test-auth-token')?.value).toBe('refreshed');
     expect(response.cookies.get('sb-test-auth-token')?.value).toBe('refreshed');
     expect(response.headers.get('cache-control')).toBe('private, no-store');
+  });
+  it('clears a revoked session from the downstream request and browser response', async () => {
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://test.supabase.co');
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY', 'sb_publishable_test');
+    vi.mocked(createServerClient).mockImplementation((_url, _key, options) => ({ auth: { getUser: async () => {
+      options.cookies.setAll?.([{ name: 'sb-test-auth-token', value: '', options: { maxAge: 0 } }], {});
+      return { data: { user: null }, error: { code: 'session_not_found' } };
+    } } }) as ReturnType<typeof createServerClient>);
+    const request = new NextRequest('https://slimexlink.example/vi/reset-password', { headers: { Cookie: 'sb-test-auth-token=revoked' } });
+    const response = await updateSession(request);
+    expect(request.cookies.get('sb-test-auth-token')?.value).toBe('');
+    expect(response.cookies.get('sb-test-auth-token')?.maxAge).toBe(0);
   });
 });

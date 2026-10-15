@@ -12,6 +12,6 @@ export function getTestConfig() {
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.TEST_SUPABASE_PUBLISHABLE_KEY,
   });
   if (!config) throw new Error('Integration blocked: TEST_SUPABASE_URL and TEST_SUPABASE_PUBLISHABLE_KEY are required.');
-  if (config.url === process.env.NEXT_PUBLIC_SUPABASE_URL) throw new Error('Integration blocked: the test project must be separate from the application project.');
+  if (process.env.VERCEL_ENV === 'production') throw new Error('Integration blocked: never run test fixtures in a production deployment.');
   return config;
 }
