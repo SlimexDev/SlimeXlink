@@ -18,6 +18,7 @@ test('creator CRUD and guest task unlock use the real database without leaking t
   const origin = app.NEXT_PUBLIC_SITE_URL!;
   const slug = `browser-${crypto.randomUUID()}`;
   const destination = `${origin}/en/guide?private=${crypto.randomUUID()}`;
+  let stage = 'login-and-create';
   try {
     await page.goto(`${origin}/vi/login`);
     await page.getByLabel('Email', { exact: true }).fill(email);
@@ -32,6 +33,7 @@ test('creator CRUD and guest task unlock use the real database without leaking t
     await page.getByLabel('Ảnh link', { exact: false }).setInputFiles({ name: 'cover.png', mimeType: 'image/png', buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aY4sAAAAASUVORK5CYII=', 'base64') });
     await page.getByRole('button', { name: 'Lưu link', exact: true }).click();
     await expect(page).toHaveURL(/dashboard\/links\/[a-f0-9-]{36}$/);
+    stage = 'public-page';
     const publicPage = await guest.newPage();
     await publicPage.goto(`${origin}/vi/u/${slug}`);
     expect(await publicPage.content()).not.toContain(destination);
@@ -43,6 +45,7 @@ test('creator CRUD and guest task unlock use the real database without leaking t
     await publicPage.setViewportSize({ width: 390, height: 844 });
     await publicPage.screenshot({ path: 'docs/screenshots/unlock-390.png', fullPage: true });
     expect(await publicPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    stage = 'early-return';
     const earlyPopupPromise = publicPage.waitForEvent('popup');
     await publicPage.getByRole('button', { name: 'Mở nhiệm vụ', exact: true }).click();
     const earlyPopup = await earlyPopupPromise;
@@ -51,19 +54,23 @@ test('creator CRUD and guest task unlock use the real database without leaking t
     await publicPage.evaluate(() => { Object.defineProperty(document, 'hidden', { configurable: true, value: false }); document.dispatchEvent(new Event('visibilitychange')); });
     await expect(publicPage.getByText('Quay lại quá sớm. Hãy làm lại.', { exact: true })).toBeVisible();
     await earlyPopup.close();
+    stage = 'retry-task';
     const popupPromise = publicPage.waitForEvent('popup');
     await publicPage.getByRole('button', { name: 'Mở nhiệm vụ', exact: true }).click();
     const popup = await popupPromise;
     await popup.waitForURL(`${origin}/en`);
     // Headless tabs do not consistently dispatch focus events; drive browser visibility explicitly.
     await publicPage.evaluate(() => { Object.defineProperty(document, 'hidden', { configurable: true, value: true }); document.dispatchEvent(new Event('visibilitychange')); });
+    stage = 'wait-for-task';
     await publicPage.waitForTimeout(8500);
     await publicPage.evaluate(() => { Object.defineProperty(document, 'hidden', { configurable: true, value: false }); document.dispatchEvent(new Event('visibilitychange')); });
     await expect(publicPage.getByText('Đã hoàn thành', { exact: true })).toBeVisible();
     expect(await publicPage.content()).not.toContain(destination);
+    stage = 'unlock';
     await publicPage.getByRole('button', { name: 'Mở khóa nội dung', exact: true }).click();
     await expect(publicPage).toHaveURL(destination);
     await popup.close();
+    stage = 'disable';
     await page.getByLabel('Bật link', { exact: true }).uncheck();
     await page.getByRole('button', { name: 'Lưu link', exact: true }).click();
     await expect(page.getByLabel('Bật link', { exact: true })).not.toBeChecked();
@@ -71,11 +78,13 @@ test('creator CRUD and guest task unlock use the real database without leaking t
     await expect(page.locator('input[name="revision"]').first()).toHaveValue('2');
     await publicPage.goto(`${origin}/vi/u/${slug}`);
     await expect(publicPage.getByText('Link này đã bị tắt.', { exact: true })).toBeVisible();
+    stage = 'analytics';
     await page.getByRole('link', { name: 'Thống kê', exact: true }).click();
     await expect(page.getByRole('heading', { level: 1 })).toContainText('Thống kê');
     await expect(page.getByRole('cell', { name: '1', exact: true })).toHaveCount(2);
     await page.getByRole('link', { name: '← Quản lý link', exact: true }).click();
     await expect(page).toHaveURL(/dashboard\/links\/[a-f0-9-]{36}$/);
+    stage = 'expire';
     const originalEditor = page.url();
     await page.getByLabel('Bật link', { exact: true }).check();
     await page.getByLabel('Hết hạn', { exact: false }).fill('2000-01-01T00:00');
@@ -83,6 +92,7 @@ test('creator CRUD and guest task unlock use the real database without leaking t
     await expect(page.locator('input[name="revision"]').first()).toHaveValue('3');
     await publicPage.goto(`${origin}/vi/u/${slug}`);
     await expect(publicPage.getByText('Link này đã hết hạn.', { exact: true })).toBeVisible();
+    stage = 'duplicate';
     await page.getByRole('link', { name: 'Nhân bản', exact: true }).click();
     await page.getByLabel('Hết hạn', { exact: false }).fill('');
     await page.getByRole('button', { name: 'Thêm nhiệm vụ', exact: true }).click();
@@ -93,15 +103,20 @@ test('creator CRUD and guest task unlock use the real database without leaking t
     await page.getByRole('button', { name: 'Lưu link', exact: true }).click();
     await expect(page).toHaveURL(/dashboard\/links\/[a-f0-9-]{36}$/);
     expect(page.url()).not.toBe(originalEditor);
+    stage = 'reload-copy';
     await page.reload();
     await expect(page.locator('#task-title-0')).toHaveValue('Second task');
     await page.getByLabel('Xác nhận xóa link', { exact: false }).check();
     await page.getByRole('button', { name: 'Xóa link', exact: true }).click();
     await expect(page).toHaveURL(`${origin}/vi/dashboard`);
+    stage = 'delete-original';
     await page.goto(originalEditor);
     await page.getByLabel('Xác nhận xóa link', { exact: false }).check();
     await page.getByRole('button', { name: 'Xóa link', exact: true }).click();
     await expect(page).toHaveURL(`${origin}/vi/dashboard`);
+  } catch (error) {
+    console.error('Creator E2E failure', { stage, pathname: new URL(page.url()).pathname });
+    throw error;
   } finally {
     await guest.close();
     const files = await admin.storage.from('link-images').list(created.data.user.id);
