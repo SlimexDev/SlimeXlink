@@ -13,8 +13,8 @@ Cập nhật: 2026-10-16, Asia/Saigon. Các checkpoint lịch sử phía dưới
 | Analytics | 7/30/90 ngày, UTC visitor/link/day dedup; dữ liệu thật và trang thống kê có E2E |
 | Quản trị | Users/links/reports/contacts/audit; server + DB roles, moderation atomic audit, khóa member; integration + report UI E2E |
 | Kiểm thử | 36 unit; 8 integration (5 files); full E2E 29/29 đạt; contact/admin bổ sung 1/1 đạt |
-| CI | Workflow quality + connected đã viết; chưa chạy trên GitHub, cần test Environment/secrets |
-| Vercel | Chưa deploy SlimeXlink; connector chỉ thấy project khác, không tái sử dụng |
+| CI | Quality + connected đã chạy đạt trên GitHub main (run 38797112794); environment test chỉ cho phép main/codex branch |
+| Vercel | Preview đã deploy và browser smoke thật đạt; production đã có schema riêng, chờ server key |
 | Kiếm tiền | Loại khỏi phạm vi theo yêu cầu |
 
 Chưa nghiệm thu production. Còn kiểm tra browser chuyển tab tự nhiên (headless dùng visibility event có kiểm soát), email delivery/PKCE từ hộp thư, OAuth trên domain triển khai, xoay service key đã từng nhập nhầm và cấu hình project production riêng. Link-image orphan Storage đang cần dọn có kiểm tra tham chiếu; cron hiện dọn dữ liệu database. Hướng dẫn ở docs/DEPLOYMENT.md, kiến trúc ở docs/CORE-ARCHITECTURE.md.
@@ -84,3 +84,15 @@ Checkpoint Git nền tảng: db5b2c9 (mã/tests), d0bb84f (tài liệu/bằng ch
 - 30/30 unit đạt; 5/5 integration thật đạt (8 request đồng thời max1 chỉ một thắng); 25/25 toàn bộ E2E đạt; typecheck, lint và production build đạt. Đã xem ảnh forgot-password-vi-390.png và reset-password-1440.png.
 - Browser harness thật dùng Admin API tạo recovery OTP không gửi email, mint cookie test ở phía test, thực hiện reset qua form ứng dụng rồi xác minh mật khẩu cũ bị từ chối/mật khẩu mới hoạt động/replay bị chặn. Không coi harness là test email delivery hoặc callback PKCE end-to-end.
 - I07 chưa nghiệm thu toàn bộ: cần email sink/hộp thư test để đi qua email → callback thật. I09 avatar là việc kế tiếp. Google smoke trước đó do người dùng xác nhận, không tự động tương tác tài khoản Google thật.
+
+## Deployment checkpoint — 2026-10-16
+
+- Repository main đã push; draft PR #1 lưu bản triển khai.
+- Vercel team slimex-dev-s-projects, project slimexlink (prj_syuIWhSlpiapVF32Dq8YusWlO4lC). Preview: https://slimexlink-git-main-slimex-dev-s-projects.vercel.app — noindex, có Deployment Protection.
+- Deployment dpl_BN36oaBKocngnoQ6oBgf36Caqc1H đã build thành công từ main 5d9c7df; preview dùng Supabase test, không cấu hình test secrets cho production.
+- Health/home vi/en/login/discover HTTP 200. Browser smoke trên preview thật: login, create, không leak target, task, redirect, ảnh 1440/390; fixture dọn xong. Google preview đang tắt vì chưa cấu hình callback domain.
+- CI Linux lần đầu timeout 1 creator E2E; chẩn đoán theo stage được thêm; lần sau 29/29 đạt. Test tiếp tục bổ sung đợi departure RPC ACK trước khoảng chờ, không nới timeout/skip assertion.
+- User đã tạo SlimeXlink-production trong LinkUnlock, ref wevmbqhmuiukfbzjkcav, Sydney, Free. Đã áp dụng đủ 8 migrations, không seed/user test; auth.users = 0. RLS bật trên 11 bảng public; guest không đọc link_targets, không ghi unlock_sessions; member không ghi task_results.
+- Production Vercel đã có public Supabase URL/key, rate-limit/cron secrets riêng và Google=false; còn thiếu SUPABASE_SERVICE_ROLE_KEY. Đã yêu cầu lưu key vào .env.production.local (gitignored), không gửi chat.
+- Security advisors: 3 INFO deny-all tables không policy (server-only), 3 WARN authenticated SECURITY DEFINER RPC (save/delete có ownership/active checks, moderate có admin check; đã kiểm thử trên test DB). Không mở thêm quyền để xóa cảnh báo. Tham khảo https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable và https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy.
+- Auto production build được giữ bằng Ignored Build Step `test "$VERCEL_ENV" = production`; cần gỡ khi production env/schema/Auth sẵn sàng.

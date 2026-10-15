@@ -21,7 +21,7 @@
 
 ## CI và secrets
 
-`.github/workflows/quality.yml` chạy typecheck/lint/unit/build cho PR. `.github/workflows/connected.yml` chạy toàn bộ quality gates rồi integration + E2E khi push main hoặc codex/slimexlink-core, trong GitHub Environment `test`. Environment chỉ cho phép hai nhánh tin cậy này; mã PR/fork không được cấp secret. Tạo environment này với secrets TEST_SUPABASE_URL, TEST_SUPABASE_PUBLISHABLE_KEY, TEST_SUPABASE_SERVICE_ROLE_KEY và variable TEST_ALLOW_SUPABASE=true, chỉ dùng disposable project đã áp dụng migrations. Hạn chế quyền chạy job có secrets; không chạy mã PR không tin cậy với khóa đặc quyền. Thiếu cấu hình job thất bại rõ ràng, không skip hoặc giả backend. Quality job đã chạy đạt trên GitHub; connected đang xác minh sau cấu hình environment.
+`.github/workflows/quality.yml` chạy typecheck/lint/unit/build cho PR. `.github/workflows/connected.yml` chạy toàn bộ quality gates rồi integration + E2E khi push main hoặc codex/slimexlink-core, trong GitHub Environment `test`. Environment chỉ cho phép hai nhánh tin cậy này; mã PR/fork không được cấp secret. Tạo environment này với secrets TEST_SUPABASE_URL, TEST_SUPABASE_PUBLISHABLE_KEY, TEST_SUPABASE_SERVICE_ROLE_KEY và variable TEST_ALLOW_SUPABASE=true, chỉ dùng disposable project đã áp dụng migrations. Hạn chế quyền chạy job có secrets; không chạy mã PR không tin cậy với khóa đặc quyền. Thiếu cấu hình job thất bại rõ ràng, không skip hoặc giả backend. Quality và connected đã chạy đạt trên GitHub main, run 38797112794.
 
 ## Backup và rollback
 
@@ -35,4 +35,4 @@
 
 Kiểm tra giá/giới hạn gói hiện hành trên tài liệu chính thức: [Supabase billing](https://supabase.com/docs/guides/platform/billing-on-supabase), [email SMTP](https://supabase.com/docs/guides/auth/auth-smtp), [Vercel Hobby](https://vercel.com/docs/plans/hobby), [Cron limits](https://vercel.com/docs/cron-jobs/usage-and-pricing). Không giả định free có backup, email không giới hạn hoặc SLA production. Không tự nâng gói.
 
-Khóa service role từng bị nhập vào file example local đã được xóa; chủ project đã chọn hoãn xoay khóa. Cần xoay trước production và cập nhật môi trường server. Chưa nghiệm thu email delivery/PKCE thực từ hộp thư; Google local do chủ tài khoản xác nhận. Chưa có deployment SlimeXlink được xác nhận; project Vercel khác không được tái sử dụng.
+Khóa service role từng bị nhập vào file example local đã được xóa; chủ project đã chọn hoãn xoay khóa. Cần xoay trước production và cập nhật môi trường server. Chưa nghiệm thu email delivery/PKCE thực từ hộp thư; Google local do chủ tài khoản xác nhận. Preview SlimeXlink đã deploy và smoke browser đạt tại https://slimexlink-git-main-slimex-dev-s-projects.vercel.app; production chưa sẵn sàng. Project Vercel khác không được tái sử dụng. Khi production Supabase/env/Auth đã đủ, xóa Ignored Build Step `test "$VERCEL_ENV" = production` trước khi deploy production.

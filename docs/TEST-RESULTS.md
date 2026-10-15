@@ -128,3 +128,9 @@ Kiểm tra chỉ đọc thực tế:
 2026-10-16: full E2E 29/29 (1.1 phút), integration 8/8, unit 36/36, lint/typecheck và production build đạt. Extended creator E2E bao gồm early return/fail/retry, ảnh render, analytics, disable/expire, duplicate/reorder/save/reload/delete. Discovery dùng 24 fixture: 21 đủ điều kiện công khai, trang 12+9; owner dashboard 20+4. Không skip test.
 
 Seed development thực chạy qua SQL trong transaction, tạo đúng một link rồi rollback; user fixture đã xóa. Service-role validation privilege được bổ sung sau test bắt thiếu EXECUTE; discovery test sau migration đạt. Potential secret scan 167 files lúc kiểm tra không tìm thấy key/token thực theo mẫu, env local vẫn ignored. Runtime audit 0; dev audit còn 5 high trong chain ESLint/braces, chưa có fix tương thích được xác nhận.
+
+## GitHub CI và Vercel preview
+
+- GitHub main run 38797112794: quality + connected success; 36 unit, 8 Supabase integration, 29 E2E trên Ubuntu. Lần trước timeout 1 creator test được giữ trong lịch sử, không xóa/bỏ test.
+- Vercel preview thật build thành công; health và home vi/en/login/discover trả 200, X-Robots-Tag noindex/nofollow.
+- Browser smoke trên https://slimexlink-git-main-slimex-dev-s-projects.vercel.app đạt login/create/task/redirect/no-target-in-HTML; chụp screenshot desktop/mobile. User fixture đã dọn. Không nghiệm thu production/OAuth/email delivery bằng kết quả preview này.

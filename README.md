@@ -2,7 +2,7 @@
 
 Website chia sẻ liên kết cá nhân, giao diện tiếng Việt (mặc định) và tiếng Anh. Đích triển khai: Vercel; dữ liệu, Auth và Storage: Supabase.
 
-**Hiện tại:** tài khoản, avatar, CRUD link/nhiệm vụ/ảnh, mở khóa, khám phá, báo cáo/liên hệ, thống kê và quản trị đã có mã kết nối Supabase thử nghiệm. Chưa nghiệm thu production hoặc triển khai Vercel. Không có module kiếm tiền. Xem [STATUS.md](STATUS.md) và [kết quả kiểm thử](docs/TEST-RESULTS.md) trước khi triển khai.
+**Hiện tại:** tài khoản, avatar, CRUD link/nhiệm vụ/ảnh, mở khóa, khám phá, báo cáo/liên hệ, thống kê và quản trị đã có mã kết nối Supabase thử nghiệm. Đã có Vercel preview được kiểm tra; chưa nghiệm thu production. Không có module kiếm tiền. Xem [STATUS.md](STATUS.md) và [kết quả kiểm thử](docs/TEST-RESULTS.md) trước khi triển khai.
 
 ## Chạy local
 

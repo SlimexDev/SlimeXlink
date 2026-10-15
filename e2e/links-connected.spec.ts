@@ -60,7 +60,9 @@ test('creator CRUD and guest task unlock use the real database without leaking t
     const popup = await popupPromise;
     await popup.waitForURL(`${origin}/en`);
     // Headless tabs do not consistently dispatch focus events; drive browser visibility explicitly.
+    const departure = publicPage.waitForResponse((response) => response.url().includes('/api/links/') && response.request().postDataJSON()?.operation === 'depart');
     await publicPage.evaluate(() => { Object.defineProperty(document, 'hidden', { configurable: true, value: true }); document.dispatchEvent(new Event('visibilitychange')); });
+    expect((await departure).ok()).toBe(true);
     stage = 'wait-for-task';
     await publicPage.waitForTimeout(8500);
     await publicPage.evaluate(() => { Object.defineProperty(document, 'hidden', { configurable: true, value: false }); document.dispatchEvent(new Event('visibilitychange')); });
