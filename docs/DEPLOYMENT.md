@@ -21,7 +21,7 @@
 
 ## CI và secrets
 
-`.github/workflows/quality.yml` chạy typecheck/lint/unit/build rồi integration + E2E trong GitHub Environment `test`. Tạo environment này với secrets TEST_SUPABASE_URL, TEST_SUPABASE_PUBLISHABLE_KEY, TEST_SUPABASE_SERVICE_ROLE_KEY và variable TEST_ALLOW_SUPABASE=true, chỉ dùng disposable project đã áp dụng migrations. Hạn chế quyền chạy job có secrets; không chạy mã PR không tin cậy với khóa đặc quyền. Thiếu cấu hình job thất bại rõ ràng, không skip hoặc giả backend. Workflow đã viết, chưa được xác nhận chạy trên GitHub.
+`.github/workflows/quality.yml` chạy typecheck/lint/unit/build cho PR. `.github/workflows/connected.yml` chạy toàn bộ quality gates rồi integration + E2E khi push main hoặc codex/slimexlink-core, trong GitHub Environment `test`. Environment chỉ cho phép hai nhánh tin cậy này; mã PR/fork không được cấp secret. Tạo environment này với secrets TEST_SUPABASE_URL, TEST_SUPABASE_PUBLISHABLE_KEY, TEST_SUPABASE_SERVICE_ROLE_KEY và variable TEST_ALLOW_SUPABASE=true, chỉ dùng disposable project đã áp dụng migrations. Hạn chế quyền chạy job có secrets; không chạy mã PR không tin cậy với khóa đặc quyền. Thiếu cấu hình job thất bại rõ ràng, không skip hoặc giả backend. Quality job đã chạy đạt trên GitHub; connected đang xác minh sau cấu hình environment.
 
 ## Backup và rollback
 

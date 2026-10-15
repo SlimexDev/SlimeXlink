@@ -1,6 +1,5 @@
 name: Quality
 on:
-  push:
   pull_request:
   workflow_dispatch:
 permissions:
@@ -22,42 +21,3 @@ jobs:
         env:
           NEXT_PUBLIC_SITE_URL: http://localhost:3000
           NEXT_TELEMETRY_DISABLED: '1'
-  connected:
-    needs: quality
-    runs-on: ubuntu-latest
-    environment: test
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-      - run: npm ci --ignore-scripts --strict-peer-deps
-      - name: Prepare disposable test configuration
-        env:
-          TEST_URL: ${{ secrets.TEST_SUPABASE_URL }}
-          TEST_PUBLIC: ${{ secrets.TEST_SUPABASE_PUBLISHABLE_KEY }}
-          TEST_SERVER: ${{ secrets.TEST_SUPABASE_SERVICE_ROLE_KEY }}
-          TEST_ALLOWED: ${{ vars.TEST_ALLOW_SUPABASE }}
-        run: |
-          node --input-type=module <<'JS'
-          import { writeFileSync } from 'node:fs';
-          import { randomBytes } from 'node:crypto';
-          if (!process.env.TEST_URL || !process.env.TEST_PUBLIC || !process.env.TEST_SERVER || process.env.TEST_ALLOWED !== 'true') throw new Error('Configure the protected test environment with a disposable Supabase project.');
-          const url = process.env.TEST_URL;
-          const key = process.env.TEST_PUBLIC;
-          const server = process.env.TEST_SERVER;
-          writeFileSync('.env.test.local', `TEST_SUPABASE_URL=${url}\nTEST_SUPABASE_PUBLISHABLE_KEY=${key}\nTEST_SUPABASE_SERVICE_ROLE_KEY=${server}\nTEST_ALLOW_SUPABASE=true\n`);
-          writeFileSync('.env.local', `NEXT_PUBLIC_SITE_URL=http://localhost:3000\nNEXT_PUBLIC_SUPABASE_URL=${url}\nNEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=${key}\nSUPABASE_SERVICE_ROLE_KEY=${server}\nAUTH_RATE_LIMIT_SECRET=${randomBytes(32).toString('hex')}\nAUTH_GOOGLE_ENABLED=false\nNEXT_TELEMETRY_DISABLED=1\n`);
-          JS
-      - run: npm run test:integration -- --run
-      - run: npm run build
-      - run: npx playwright install --with-deps chromium
-        env:
-          PLAYWRIGHT_BROWSERS_PATH: .cache/ms-playwright
-      - run: npm run test:e2e
-        env:
-          PLAYWRIGHT_BROWSERS_PATH: .cache/ms-playwright
-      - name: Remove local credentials
-        if: always()
-        run: rm -f .env.local .env.test.local
